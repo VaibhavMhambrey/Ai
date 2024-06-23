@@ -57,7 +57,7 @@ class Graph:
         return None
 
 graph = Graph()
- 
+
 graph.add_node('S', heuristic=14)
 graph.add_node('A', heuristic=11)
 graph.add_node('B', heuristic=10)
