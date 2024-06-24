@@ -1,69 +1,78 @@
-from queue import PriorityQueue
-#1 2 3 7 8 4 6 0 5
-def print_state(state):
-    for i in range(0, 9, 3):
-        print(state[i:i + 3])
+def drawstate(state):
+    dash =13*"-"
+    for i in range(3):
+        print(dash)
+        print("| ",end ="")
+        for j in range(3):
+            if state[i][j] !=0:
+                print(state[i][j],end = " | ")
+            else:
+                print("_",end=" | ")    
+        print()
+    print(dash)
+def heuristic(state,goal):
+    count =0
+    for i in range(3):
+        for j in range(3):
+            if state[i][j]!=goal[i][j]:
+                count+=1
+    return count
+def find_misplaced(state):
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] == 0:
+                return i,j
+def movegen(state,goal):
+    X,Y = find_misplaced(state)
+    templist = [(X+1,Y),(X-1,Y),(X,Y+1),(X,Y-1)]
+    templist = [x for x in templist if 0<=x[0]<3 and 0<=x[1]<3]
+    newstate=[]
+    for x in templist:
+        new = [row[:] for row in state]
+        new[X][Y] = state[x[0]][x[1]]
+        new[x[0]][x[1]] = 0
+        newstate.append((new,heuristic(new,goal))) 
+    return newstate
 
-def heuristic(state, goal_state):
-    return sum(1 for i in range(9) if state[i] != goal_state[i])
 
-def move(state, direction):
-    blank_index = state.index(0)
-    new_state = list(state)
-    if direction == 'up' and blank_index > 2:
-        new_state[blank_index], new_state[blank_index - 3] = new_state[blank_index - 3], new_state[blank_index]
-    elif direction == 'down' and blank_index < 6:
-        new_state[blank_index], new_state[blank_index + 3] = new_state[blank_index + 3], new_state[blank_index]
-    elif direction == 'left' and blank_index % 3 != 0:
-        new_state[blank_index], new_state[blank_index - 1] = new_state[blank_index - 1], new_state[blank_index]
-    elif direction == 'right' and blank_index % 3 != 2:
-        new_state[blank_index], new_state[blank_index + 1] = new_state[blank_index + 1], new_state[blank_index]
-    else:
-        return None
-    return tuple(new_state)
 
-def generate_neighbors(state):
-    neighbors = []
-    directions = ['up', 'down', 'left', 'right']
-    for direction in directions:
-        neighbor = move(state, direction)
-        if neighbor is not None:
-            neighbors.append(neighbor)
-    return neighbors
-
-def solve_puzzle(initial_state, goal_state, max_steps=10):
-    current_state = initial_state
-    current_cost = heuristic(initial_state, goal_state)
-    steps = 0
-    path = [current_state]
-    print_state(current_state)
-    print("Current heuristic : ",current_cost)
-    print()
-    priority_queue = PriorityQueue()
-    priority_queue.put((current_cost, current_state))
-    
-    while not priority_queue.empty() and steps < max_steps:
-        current_cost, current_state = priority_queue.get()
-        if current_cost == 0:
-            print_state(current_state)
-            print("Current heuristic : ",current_cost)
-            print()
-            print("Goal state reached!")
+def BestFirstSearch(start,goal):
+    count = 0
+    open = [(start,heuristic(start,goal))]
+    closed = []
+    closed.append(open)
+    traversal = []
+    par={}
+    templist = []
+    while open:
+        a = open.pop(0)
+        count+=1
+        print(f"Step {count}: ")
+        drawstate(a[0])
+        traversal.append(a)
+        if a[1] == 0:
+            print("Goal state reached!!")
             break
+        templist = movegen(a[0],goal)
+        templist = [x for x in templist if x not in closed]
         
-        neighbors = generate_neighbors(current_state)
-        for neighbor in neighbors:
-            neighbor_cost = heuristic(neighbor, goal_state)
-            priority_queue.put((neighbor_cost, neighbor))
-        
-        if path[-1] != current_state:  # Avoid duplicate states
-            path.append(current_state)
-            print_state(current_state)
-            print("Current heuristic : ",current_cost)
-            print()
-        steps += 1
-    if current_cost > 0:
-        print("No solution found")
-initial_state = tuple(map(int, input("Enter initial state : ").split()))
-goal_state = (1, 2, 3, 8, 0, 4, 7, 6, 5)
-solve_puzzle(initial_state, goal_state)
+        open+=templist
+        closed.extend(templist)
+        open.sort(key = lambda x:x[1])
+        print(open)
+
+def eightpuzzle():
+    start =[[2,8,3],
+            [1,6,4],
+            [7,0,5]]
+    
+    goal = [[1,2,3],
+            [8,0,4],
+            [7,6,5]]
+    print("Initial state: ")
+    drawstate(start)
+    print("Goal state: ")
+    drawstate(goal)
+    BestFirstSearch(start,goal)
+
+eightpuzzle()
